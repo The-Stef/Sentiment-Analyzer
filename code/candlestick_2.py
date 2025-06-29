@@ -16,7 +16,6 @@ import nltk
 
 # Setup
 nltk.download('vader_lexicon')
-# %matplotlib inline
 
 # Admin messages - useless for sentiment analysis
 FILTERS = [
