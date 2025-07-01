@@ -26,12 +26,12 @@ get_charts(sentiment_dict)
 We include an example chat export under `examples/data‐snippet.txt` and two sets of output charts:
 
 - **Small sample** (<700 messages):  
-  ![Sample chart – 3 users](./examples/p1-sentiment.png)
+  ![Sample chart – 3 users](./examples/p1-sentiment.png)  
   Sentiment curves for each of the three participants over a handful of days.
 
 - **Larger dataset** (≈7,000 messages):  
   ![Larger‐data chart – Stefan (me)](./examples/stefan-sentiment.png)  
-  With more data, the trends smooth out and become more insightful—so we recommend running on as much chat history as is available.
+  With more data, the trends smooth out and become more insightful, so it is recommended to run the program on as much chat history as is available.
 
 ## Dependencies
 
