@@ -17,6 +17,11 @@ import nltk
 # Setup
 nltk.download('vader_lexicon')
 
+date_pattern = re.compile(r'\b\d{1,2}/\d{1,2}/\d{2}\b')
+time_pattern = re.compile(r'\d{2}:\d{2}')
+name_pattern = re.compile(r'(?<=- )(.*?)(?=:)')
+msg_pattern = re.compile(r'(?<=: )(.*)$')
+
 # Admin messages - useless for sentiment analysis
 FILTERS = [
       "<Media omitted>",
@@ -67,7 +72,6 @@ Returns:
 """
 def data_validation(filePath: str) -> str:
   fileName = ntpath.basename(filePath).removesuffix(".txt")
-  date_pattern = re.compile(r'\b\d{1,2}/\d{1,2}/\d{2}, \d{2}:\d{2}\b')
   prev_line = ""
 
   with open(filePath, 'r') as f1, open(f"validated-{fileName}.txt", 'wb+') as f2:
@@ -102,10 +106,6 @@ def sentiment_analysis(filePath: str) -> dict:
   members_sentiment_cache = {}
   analyzer = SentimentIntensityAnalyzer()
 
-  date_pattern = re.compile(r'\b\d{1,2}/\d{1,2}/\d{2}\b')
-  name_pattern = re.compile(r'(?<=- )(.*?)(?=:)')
-  msg_pattern = re.compile(r'(?<=: )(.*)$')
-
   with open(filePath, 'r') as f:
     for line in f:
       # Get message components
@@ -136,11 +136,6 @@ Returns:
 def convert_txt_to_json(filePath: str) -> str:
   fileName = ntpath.basename(filePath).removesuffix(".txt")
 
-  date_pattern = re.compile(r'\b\d{1,2}/\d{1,2}/\d{2}\b')
-  time_pattern = re.compile(r'\d{2}:\d{2}')
-  name_pattern = re.compile(r'(?<=- )(.*?)(?=:)')
-  msg_pattern = re.compile(r'(?<=: )(.*)$')
-
   with open(filePath, 'r') as f1, open(f"{fileName}.json", 'w', encoding = "utf-8") as f2:
     f2.write('{\n\t"conversation": [\n')
 
@@ -163,6 +158,32 @@ def convert_txt_to_json(filePath: str) -> str:
     f2.write('\n\t]\n}\n')
 
   return os.path.abspath(f"{fileName}.json")
+
+"""
+Convert an exported .txt file to .csv format.
+
+Args:
+  filePath (str): The path to the validated chat logs file.
+
+Returns:
+  str: The path to the resulting .csv file.
+"""
+def convert_txt_to_csv(filePath: str) -> str:
+  fileName = ntpath.basename(filePath).removesuffix(".txt")
+
+  with open(filePath, 'r', encoding = "utf-8") as f1, open(f"{fileName}.csv", 'w', encoding = "utf-8") as f2:
+    writer = csv.writer(f2)
+    writer.writerow(["Date", "Time", "Username", "Message"])
+    
+    for line in f1:
+      date = date_pattern.search(line).group()
+      time = time_pattern.search(line).group()
+      name = name_pattern.search(line).group()
+      msg = msg_pattern.search(line).group()
+
+      writer.writerow([date, time, name, msg])
+
+  return os.path.abspath(f"{fileName}.csv")
 
 """
 Takes sentiment_analysis()'s resulting dictionary and creates a sentiment chart for each member.
