@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import date, datetime
 from dateutil import parser
+from typing import Tuple 
 import logging as logger
 import ntpath
 import time
@@ -95,38 +96,6 @@ def data_validation(filePath: str) -> str:
   return os.path.abspath(f"validated-{fileName}.txt")
 
 """
-Analyzes all messages in a text file to calculate sentiment scores.
-
-Args:
-  filePath (str): The path to the validated chat logs file.
-
-Returns:
-  dict: A dictionary of all chat members and their sentiment scores.
-"""
-def sentiment_analysis_txt(filePath: str) -> dict:
-  members_sentiment = defaultdict(list)
-  members_sentiment_cache = {}
-  analyzer = SentimentIntensityAnalyzer()
-
-  with open(filePath, 'r') as f:
-    for line in f:
-      # Get message components
-      month, day, year = map(int, date_pattern.search(line).group().split("/"))
-      timestamp = date(2000 + year, month, day)
-      msg_sender = name_pattern.search(line).group()
-      msg = msg_pattern.search(line).group()
-
-      # Acquire compounded sentiment score
-      score = analyzer.polarity_scores(msg)["compound"]
-
-      new_sentiment_value = members_sentiment_cache.get(msg_sender, 0.0) + score
-
-      members_sentiment[msg_sender].append((new_sentiment_value, timestamp))
-      members_sentiment_cache[msg_sender] = new_sentiment_value
-
-  return members_sentiment
-
-"""
 Convert an exported .txt file to .json format.
 
 Args:
@@ -162,33 +131,6 @@ def convert_txt_to_json(filePath: str) -> str:
   return os.path.abspath(f"{fileName}.json")
 
 """
-Analyzes all messages in a json file to calculate sentiment scores.
-
-Args:
-  filePath (str): The path to the .json file.
-
-Returns:
-  dict: A dictionary of all chat members and their sentiment scores.
-"""
-def sentiment_analysis_json(filePath: str) -> dict:
-  members_sentiment = defaultdict(list)
-  members_sentiment_cache = {}
-  analyzer = SentimentIntensityAnalyzer()
-
-  with open(filePath, "rb") as f1:
-    for obj in ijson.items(f1, "item"):
-      month, day, year = map(int, obj["date"].split("/"))
-      date_result = date(2000 + year, month, day)
-
-      score = analyzer.polarity_scores(obj["message"])["compound"]
-
-      new_sentiment_value = members_sentiment_cache.get(obj["username"], 0.0) + score
-      members_sentiment[obj["username"]].append((new_sentiment_value, date_result))
-      members_sentiment_cache[obj["username"]] = new_sentiment_value
-
-  return members_sentiment
-
-"""
 Convert an exported .txt file to .csv format.
 
 Args:
@@ -213,40 +155,6 @@ def convert_txt_to_csv(filePath: str) -> str:
       writer.writerow([date, time, name, msg])
 
   return os.path.abspath(f"{fileName}.csv")
-
-"""
-Analyzes all messages in a csv file to calculate sentiment scores.
-
-Args:
-  filePath (str): The path to the .csv file.
-
-Returns:
-  dict: A dictionary of all chat members and their sentiment scores.
-"""
-def sentiment_analysis_csv(filePath: str) -> dict:
-  members_sentiment = defaultdict(list)
-  members_sentiment_cache = {}
-  analyzer = SentimentIntensityAnalyzer()
-
-  with open(filePath, 'r', encoding = "utf-8") as f1:
-    first_line = True
-
-    for line in f1:
-      if first_line:
-        first_line = False
-      else:
-        msg_date, time, name, msg = line.split(",", 3)
-        month, day, year = map(int, msg_date.split("/"))
-        date_result = date(2000 + year, month, day)
-
-        score = analyzer.polarity_scores(msg)["compound"]
-
-        new_sentiment_value = members_sentiment_cache.get(name, 0.0) + score
-
-        members_sentiment[name].append((new_sentiment_value, date_result))
-        members_sentiment_cache[name] = new_sentiment_value
-
-  return members_sentiment
 
 """
 Takes sentiment_analysis()'s resulting dictionary and creates a sentiment chart for each member.
@@ -274,3 +182,98 @@ def get_charts(sentiment_dictionary: dict) -> None:
 
     plt.savefig(f"{directory_path}/{group_member}-sentiment.png", bbox_inches='tight')
     plt.close()
+
+"""
+Takes a line from a .txt file and returns the timestamp, sender, and message content.
+
+Args:
+  line (str): A line of text from the .txt file
+
+Returns:
+  Tuple(date, str, str): A tuple of all the values.
+"""
+def get_txt(line: str) -> Tuple[date, str, str]:
+  month, day, year = map(int, date_pattern.search(line).group().split("/"))
+  timestamp = date(2000 + year, month, day)
+  msg_sender = name_pattern.search(line).group()
+  msg = msg_pattern.search(line).group()
+
+  return timestamp, msg_sender, msg
+
+"""
+Takes a line from a .csv file and returns the timestamp, sender, and message content.
+
+Args:
+  line (str): A line of text from the .txt file
+
+Returns:
+  Tuple(date, str, str): A tuple of all the values.
+"""
+def get_csv(line: str) -> Tuple[date, str, str]:
+  msg_date, time, msg_sender, msg = line.split(",", 3)
+  month, day, year = map(int, msg_date.split("/"))
+  timestamp = date(2000 + year, month, day)
+  
+  return timestamp, msg_sender, msg
+
+"""
+Takes an ijson object from a .json file and returns the timestamp, sender, and message content.
+
+Args:
+  obj (dict): An ijson object from the .json file
+
+Returns:
+  Tuple(date, str, str): A tuple of all the values.
+"""
+def get_json(obj: str) -> Tuple[date, str, str]:
+  month, day, year = map(int, obj["date"].split("/"))
+  timestamp = date(2000 + year, month, day)
+  msg_sender = obj["username"]
+  msg = obj["message"]
+  
+  return timestamp, msg_sender, msg
+
+def update_user_sentiment_score(analyzer, msg, members_sentiment, members_sentiment_cache, name, timestamp):
+  score = analyzer.polarity_scores(msg)["compound"]
+
+  new_sentiment_value = members_sentiment_cache.get(name, 0.0) + score
+
+  members_sentiment[name].append((new_sentiment_value, timestamp))
+  members_sentiment_cache[name] = new_sentiment_value
+
+"""
+Analyzes all messages in a file to calculate sentiment scores.
+Currently supports: .txt, .json, .csv
+
+Args:
+  filePath (str): The path to the file.
+
+Returns:
+  dict: A dictionary of all chat members and their sentiment scores.
+"""
+def sentiment_analysis(filePath: str) -> dict:
+  fileExtension = os.path.splitext(filePath)[1].lower()
+  members_sentiment = defaultdict(list)
+  members_sentiment_cache = {}
+  analyzer = SentimentIntensityAnalyzer()
+
+  if fileExtension == ".csv":
+    with open(filePath, "r", encoding = "utf-8") as f:
+      next(f)
+      for line in f:
+        timestamp, msg_sender, msg = get_csv(line)
+        update_user_sentiment_score(analyzer, msg, members_sentiment, members_sentiment_cache, msg_sender, timestamp)
+  elif fileExtension == ".json":
+    with open(filePath, "rb") as f:
+      for obj in ijson.items(f, "item"):
+        timestamp, msg_sender, msg = get_json(obj)
+        update_user_sentiment_score(analyzer, msg, members_sentiment, members_sentiment_cache, msg_sender, timestamp)
+  elif fileExtension == ".txt":
+    with open(filePath, "r", encoding = "utf-8") as f:
+      for line in f:
+        timestamp, msg_sender, msg = get_txt(line)
+        update_user_sentiment_score(analyzer, msg, members_sentiment, members_sentiment_cache, msg_sender, timestamp)
+  else:
+    raise ValueError(f"Unsupported file extension: {fileExtension}")
+
+  return members_sentiment
