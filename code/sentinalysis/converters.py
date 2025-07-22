@@ -1,4 +1,4 @@
-from config import date_pattern, time_pattern, name_pattern, msg_pattern
+from .config import date_pattern, time_pattern, name_pattern, msg_pattern
 import ntpath
 import orjson
 import csv

@@ -1,6 +1,6 @@
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from parsers import get_txt, get_json, get_csv
-from utils import check_vader_lexicon
+from .parsers import get_txt, get_json, get_csv
+from .utils import check_vader_lexicon
 from collections import defaultdict
 import ijson
 import os

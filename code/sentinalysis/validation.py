@@ -1,4 +1,4 @@
-from config import FILTERS_REGEX, date_pattern
+from .config import FILTERS_REGEX, date_pattern
 import ntpath
 import os
 
