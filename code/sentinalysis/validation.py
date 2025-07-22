@@ -9,15 +9,17 @@ Therefore, the content is modified to act as one message.
 
 Args:
   filePath (str): The path to the chat logs file, must be an exported .txt file.
+  outputPath (str): The path of the directory where the validated .txt file will be saved.
 
 Returns:
   str: The path to the validated file.
 """
-def data_validation(filePath: str) -> str:
+def data_validation(filePath: str, outputPath: str) -> str:
   fileName = ntpath.basename(filePath).removesuffix(".txt")
+  outputPath = os.path.join(outputPath, f"validated-{fileName}.txt")
   prev_line = ""
 
-  with open(filePath, 'r', encoding = "utf-8") as f1, open(f"validated-{fileName}.txt", 'wb+') as f2:
+  with open(filePath, 'r', encoding = "utf-8") as f1, open(outputPath, 'wb+') as f2:
     for line in f1:
       if not FILTERS_REGEX.search(line):
         # If current line does not start with timestamp, treat it as message continuation
@@ -33,4 +35,4 @@ def data_validation(filePath: str) -> str:
     if prev_line:
       f2.write(prev_line.encode())
 
-  return os.path.abspath(f"validated-{fileName}.txt")
+  return os.path.abspath(outputPath)
