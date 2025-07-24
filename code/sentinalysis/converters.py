@@ -56,7 +56,7 @@ def convert_txt_to_csv(filePath: str) -> str:
     writer.writerow(["Date", "Time", "Username", "Message"])
 
     for line in f1:
-      date = date_pattern.search(line).group() # String
+      date = date_pattern.search(line).group()
       time = time_pattern.search(line).group()
       name = name_pattern.search(line).group()
       msg = msg_pattern.search(line).group()

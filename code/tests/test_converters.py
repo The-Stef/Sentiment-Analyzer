@@ -1,4 +1,5 @@
-from sentinalysis.converters import convert_txt_to_json
+from sentinalysis.converters import convert_txt_to_json, convert_txt_to_csv
+import pandas as pd
 import unittest
 import json
 import os
@@ -6,7 +7,7 @@ import re
 
 class TestConverters(unittest.TestCase):
     """
-    Checks if the convert_txt_to_json function behaves properly.
+    Checks if the convert_txt_to_json function returns expected output.
     Converts validated .txt input to .json, and checks whether the JSON object components contain the proper information.
     """
     def test_correct_conversion_to_json_file(self):
@@ -70,7 +71,7 @@ class TestConverters(unittest.TestCase):
         os.remove(result_path)
 
     """
-    Checks if the conversion function throws an error when provided with an incorrect path.
+    Checks if the json conversion function throws an error when provided with an incorrect path.
     Only Windows paths are tested at the moment.
     """
     def test_provide_non_existent_path_to_json_conversion_function(self):
@@ -81,6 +82,90 @@ class TestConverters(unittest.TestCase):
         file_name2 = "C:\\Users\\username\\AppData\\Roaming\\nltk_data\\sentiment\\vader_lexicon.txt"
         with self.assertRaises(FileNotFoundError):
             convert_txt_to_json(file_name2)
+
+    """
+    Checks whether or not the header of the .csv file is the expected one.
+    """
+    def test_check_csv_converter_header(self):
+        file_name = "test-sentinalysis-csv-conversion.txt"
+        file_name_csv = "test-sentinalysis-csv-conversion.csv"
+
+        with open(file_name, "w") as f1:
+            f1.write("""7/23/25, 16:45 - TestPerson: This is a test.""")
+        converted_csv = convert_txt_to_csv(file_name)
+        os.remove(file_name)
+
+        with open(converted_csv, "r") as f2:
+            data = f2.read()
+        os.remove(file_name_csv)
+
+        first_row = data.partition("\n")
+        self.assertEqual(first_row[0], 'Date,Time,Username,Message', f"The .csv file header is different than what it should be: {first_row[0]}")
+
+    """
+    Checks if the convert_txt_to_json function returns expected output.
+    """
+    def test_check_correct_conversion_to_csv_file(self):
+        file_name = "test-sentinalysis-csv-commas.txt"
+        file_name_csv = "test-sentinalysis-csv-commas.csv"
+
+        with open(file_name, "w") as f1:
+            f1.write("""4/16/21, 14:10 - TestPerson: This is a csv test.""")
+        convert_txt_to_csv(file_name)
+        os.remove(file_name)
+
+        data = pd.read_csv(file_name_csv)
+        os.remove(file_name_csv)
+
+        self.assertEqual(data.at[0, "Date"], "4/16/21", "Date in the csv file is different than expected.")
+        self.assertEqual(data.at[0, "Time"], "14:10", "Time in the csv file is different than expected.")
+        self.assertEqual(data.at[0, "Username"], "TestPerson", "Username in the csv file is different than expected.")
+        self.assertEqual(data.at[0, "Message"], "This is a csv test.", "Message in the csv file is different than expected.")
+
+    """
+    Checks to see if commas in a the message field break the csv formatting.
+    """
+    def test_check_how_commas_in_message_field_are_handled(self):
+        file_name = "test-sentinalysis-csv-commas.txt"
+        file_name_csv = "test-sentinalysis-csv-commas.csv"
+
+        with open(file_name, "w") as f1:
+            f1.write("""7/24/25, 12:56 - TestPerson: This, dear TestPerson2, is a test.""")
+        convert_txt_to_csv(file_name)
+        os.remove(file_name)
+
+        data = pd.read_csv(file_name_csv)
+        os.remove(file_name_csv)
+
+        self.assertEqual(data.at[0, "Message"], "This, dear TestPerson2, is a test.")
+        self.assertEqual(len(data.columns), 4)
+
+    """
+    Checks whether the returned path is absolute and has the .csv file suffix.
+    """
+    def test_check_path_returned_by_csv_conversion_function(self):
+        file_name = "test-sentinalysis-csv-abspath-check.txt"
+        with open(file_name, "w") as f:
+            f.write("""7/14/22, 21:09 - TestPerson: This is a test.""")
+        result_path = convert_txt_to_csv(file_name)
+        os.remove(file_name)
+
+        self.assertTrue(os.path.isabs(result_path), "Returned path is not absolute.")
+        self.assertTrue(result_path.endswith(".csv"), f"Returned path does not contain the '.csv' extension at the end: {result_path}")
+        os.remove(result_path)
+
+    """
+    Checks if the csv conversion function throws an error when provided with an incorrect path.
+    Only Windows paths are tested at the moment.
+    """
+    def test_provide_non_existent_path_to_csv_conversion_function(self):
+        file_name1= "test-sentinalysis-non-existent-file2.txt"
+        with self.assertRaises(FileNotFoundError):
+            convert_txt_to_csv(file_name1)
+        
+        file_name2 = "C:\\Users\\username\\AppData\\Roaming\\nltk_data\\sentiment\\vader_lexicon.txt"
+        with self.assertRaises(FileNotFoundError):
+            convert_txt_to_csv(file_name2)
 
 if __name__ == '__main__':
     unittest.main()
