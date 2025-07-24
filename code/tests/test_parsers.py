@@ -1,7 +1,7 @@
 from sentinalysis.parsers import get_txt, get_csv, get_json
 import unittest
 import datetime
-import ijson, json
+import json
 
 class TestParsers(unittest.TestCase):
     """
@@ -84,9 +84,6 @@ class TestParsers(unittest.TestCase):
         result_tuple = get_csv(typical_line)
 
         self.assertEqual(result_tuple[2], "Here is the test: Check how the extra colon is handled.", "An extra colon in the message was not handled by the get_csv() function.")
-
-
-    # ------------ jsn ------------
 
     """
     Checks that the get_json() function behaves as expected by providing some typical input.
