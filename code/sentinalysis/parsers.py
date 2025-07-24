@@ -44,7 +44,7 @@ Args:
 Returns:
   Tuple(date, str, str): A tuple of all the values.
 """
-def get_json(obj: str) -> Tuple[date, str, str]:
+def get_json(obj: dict) -> Tuple[date, str, str]:
   month, day, year = map(int, obj["date"].split("/"))
   timestamp = date(2000 + year, month, day)
   msg_sender = obj["username"]
