@@ -124,3 +124,6 @@ class TestParsers(unittest.TestCase):
         result_tuple = get_json(typical_obj)
 
         self.assertEqual(result_tuple[2], "Here is the test: Check how the extra colon is handled.", "An extra colon in the message was not handled by the get_json() function.")
+
+if __name__ == "__main__":
+    unittest.main()

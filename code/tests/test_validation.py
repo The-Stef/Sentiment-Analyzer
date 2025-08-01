@@ -138,3 +138,6 @@ class TestValidation(unittest.TestCase):
         file_name2 = "C:\\Users\\username\\AppData\\Roaming\\nltk_data\\sentiment\\vader_lexicon.txt"
         with self.assertRaises(FileNotFoundError):
             data_validation(file_name2, os.getcwd())
+
+if __name__ == "__main__":
+    unittest.main()
