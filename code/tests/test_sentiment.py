@@ -5,14 +5,6 @@ from datetime import date
 import unittest
 import os
 
-# def update_user_sentiment_score(analyzer, msg, members_sentiment, members_sentiment_cache, name, timestamp):
-#   score = analyzer.polarity_scores(msg)["compound"]
-
-#   new_sentiment_value = members_sentiment_cache.get(name, 0.0) + score
-
-#   members_sentiment[name].append((new_sentiment_value, timestamp))
-#   members_sentiment_cache[name] = new_sentiment_value
-
 class TestSentiment(unittest.TestCase):
     """
     Checks to see if the update_user_sentiment_score() function works as intended.
