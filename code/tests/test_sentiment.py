@@ -109,7 +109,37 @@ class TestSentiment(unittest.TestCase):
         with self.assertRaises(ValueError):
             sentiment_analysis(os.path.join(os.getcwd(), test_file))
 
+    def test_main_sentiment_analysis_function(self):
+        mocked_analyzer = Mock()
+        mocked_analyzer.polarity_scores.return_value = {"compound": 0.5}
 
+        test_file_txt = "sentinalysis-function-1.txt"
+        test_file_csv = "sentinalysis-function-2.csv"
+        test_file_json = "sentinalysis-function-3.json"
+
+        with open(test_file_txt, 'w') as f1:
+            f1.write("""8/2/25, 18:32 - TestPerson: This is a test.""")
+
+        with open(test_file_csv, 'w') as f2:
+            f2.write("""Date,Time,Username,Message\n8/2/25,18:32,TestPerson,This is a test.""")
+
+        with open(test_file_json, 'w') as f3:
+            f3.write("""[{"date":"8/2/25","message":"This is a test.","time":"18:32","username":"TestPerson"}]""")
+
+        with patch("sentinalysis.sentiment.SentimentIntensityAnalyzer", return_value = mocked_analyzer):
+            from sentinalysis.sentiment import sentiment_analysis
+
+            dict_txt = sentiment_analysis(test_file_txt)
+            dict_csv = sentiment_analysis(test_file_csv)
+            dict_json = sentiment_analysis (test_file_json)
+
+        self.assertEqual(dict_txt["TestPerson"], [(0.5, date(2025, 8, 2))])
+        self.assertEqual(dict_csv["TestPerson"], [(0.5, date(2025, 8, 2))])
+        self.assertEqual(dict_json["TestPerson"], [(0.5, date(2025, 8, 2))])
+
+        os.remove(test_file_txt)
+        os.remove(test_file_csv)
+        os.remove(test_file_json)
 
 if __name__ == "__main__":
     unittest.main()
